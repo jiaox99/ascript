@@ -44,7 +44,7 @@ package parse {
 			static public var treecach:Dictionary=new Dictionary();
 			private var undot:Boolean=false;//是否忽略dot
 			
-            public function Lex(_str:String=null,_undot=false){
+            public function Lex(_str:String=null,_undot:Boolean=false){
 				if(_str){
                   ptr=0;
 				  undot=_undot;
@@ -65,7 +65,7 @@ package parse {
 							tk.line=line;
 							tk.index=words.length;
 							tk.linestr=lines[line];
-					  }catch(e){
+					  }catch(e:*){
 						  trace("词法分析"+e);
 					  }
                     if(tk){

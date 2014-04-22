@@ -37,7 +37,7 @@ package parse
 	public class ProxyFunc
 	{
 		static private var dics:Dictionary=new Dictionary();
-		static public function getAFunc(_it:DY,fn:String):Function{
+		static public function getAFunc(_it:DY,fn:String):*{
 			if(!dics[_it]){
 				dics[_it]=new Dictionary();
 			}
@@ -63,7 +63,7 @@ package parse
 			}
 		}
 		//=================
-		public function Func1(arg1):*{
+		public function Func1(arg1:*):*{
 			try{
 				//trace(it._rootnode.name+" call "+funcname+"("+args+")")
 				return it.call(funcname,[arg1]);

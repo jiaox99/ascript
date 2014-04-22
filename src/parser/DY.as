@@ -583,7 +583,7 @@ package parser
 					return onMOP(node);
 					break;
 				case GNodeType.LOP:
-					var v1=getValue(node.childs[0]);
+					var v1:*=getValue(node.childs[0]);
 					if(node.word=="||" || node.word=="or"){
 						//var v2=;
 						if(v1){
@@ -694,7 +694,7 @@ package parser
 					if(vname_arr.length==1){
 						//API部分
 						if(vname=="trace" || vname=="output"){//API
-							if(Script.output){
+							if(Script.output != null ){
 								Script.output(explist.join(","));
 							}else{
 								trace(explist.join(","));

@@ -985,7 +985,7 @@ package parser
 			tok=this.lex.words[index++] as Token;
 			//index++;
 		}
-		private function match(type:int,word=null):void{
+		private function match(type:int,word:String=null):void{
 			//trace("try eat ",tok.word);
 			if(type==tok.type && (word==null ||  tok.word==word)){
 					nextToken();

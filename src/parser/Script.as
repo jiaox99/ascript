@@ -65,7 +65,7 @@ package parser
 							classes[clname]=c;
 						}
 						return c;
-					}catch(e){
+					}catch(e:*){
 						errores[clname]=true;
 					}
 				}
@@ -102,7 +102,7 @@ package parser
 			}else{
 				____globalclass=newScript("____globalclass");
 			}
-			__globaldy=New(____globalclass.name);
+			__globaldy=NewClass(____globalclass.name);
 			vm=__globaldy;
 			//再初始化一个基本类
 			//
@@ -156,7 +156,7 @@ package parser
 		 * @return 
 		 * 
 		 **/
-		static public function New(...args):*{
+		static public function NewClass(...args):*{
 			var _name:String;
 			if(args.length==0){
 				_name="__DY";//匿名类
