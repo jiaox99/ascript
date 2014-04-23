@@ -25,17 +25,19 @@ http://code.google.com/p/ascript-as3/
 http://ascript.softplat.com/
 */       
 
-package parse {
-//
+package parse
+{
+	//
 	/**
 	 * @author dayu
 	 * 是作为解释器而写的，不同于编译器。。。。
 	 */
-	public class Token {
+	public class Token
+	{
 		public var type:int;//
-		public var value:*;//当类型为常量，则为其值
-					//当类型为ident和操作符或界符，则为其单词
-					//当类型为关键字，则为其单词，
+		public var value:*;	//当类型为常量，则为其值
+							//当类型为ident和操作符或界符，则为其单词
+							//当类型为关键字，则为其单词，
 		public var word:String;
 		public var line:int=0;
 		internal var linestr:String="";

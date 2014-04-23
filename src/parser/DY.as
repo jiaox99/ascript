@@ -33,6 +33,11 @@ package parser
 	import parse.ProxyFunc;
 	
 	//注意事项，如果要用那个_super，仅限_super的类为动态的。
+	/**
+	 * 运行时 
+	 * @author Jiao Zhongxiao
+	 * 
+	 */	
 	dynamic public class DY extends Proxy{
 		//
 		protected var __rootnode:GenTree;

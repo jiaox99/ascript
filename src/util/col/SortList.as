@@ -29,6 +29,7 @@ package util.col
 {
 	
 	/**
+	 * 带排序功能的哈希表类
 	 * @author dayu
 	 */
 	public class SortList {
