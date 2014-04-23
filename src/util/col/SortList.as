@@ -23,73 +23,136 @@ THE SOFTWARE.
 
 http://code.google.com/p/ascript-as3/
 http://ascript.softplat.com/
-*/       
+*/
 
 package util.col
 {
-	
+
 	/**
 	 * 带排序功能的哈希表类
 	 * @author dayu
 	 */
-	public class SortList {
-		public var arr : Array;//保存位置
-		public var element : Array;//实际元素
-		public var obj : Object;
-		
-		function SortList() {
-			arr = [];
-			obj = {};
-			element=[];
-		}
-		public function clear():void{
+	public class SortList
+	{
+		public var arr:Array; //保存位置
+		public var element:Array; //实际元素
+		public var obj:Object;
+
+		public function SortList()
+		{
 			arr=[];
 			obj={};
 			element=[];
 		}
-		public function add(s:String,object):void{
-			if (obj[s] == null) {
-				obj[s] = arr.length;
+
+		public function clear():void
+		{
+			arr=[];
+			obj={};
+			element=[];
+		}
+
+		/**
+		 * 添加一个key => value 
+		 * @param s
+		 * @param object
+		 * 
+		 */		
+		public function add(s:String, object):void
+		{
+			if (obj[s] == null)
+			{
+				obj[s]=arr.length;
 				arr.push(s);
-				element.push(object);		
+				element.push(object);
 			}
 		}
-		public function setobj(s:String,Value:Object):void{
-			if(exist(s)){
+
+		/**
+		 * 重新设置一个Key(此Key必须之前设置过，不然无效) 
+		 * @param s
+		 * @param Value
+		 * 
+		 */		
+		public function setobj(s:String, Value:Object):void
+		{
+			if (exist(s))
+			{
 				element[obj[s]]=Value;
 			}
 		}
-		public function getobj(s:String):Object{
-			if(exist(s)){
+
+		/**
+		 * 根据Key获取一个Value 
+		 * @param s
+		 * @return 
+		 * 
+		 */		
+		public function getobj(s:String):Object
+		{
+			if (exist(s))
+			{
 				return element[obj[s]];
 			}
 			return null;
 		}
-		public function exist(s:String):Boolean{
+
+		/**
+		 * 判定一个Key是否存在 
+		 * @param s
+		 * @return 
+		 * 
+		 */		
+		public function exist(s:String):Boolean
+		{
 			return obj[s] != null;
 		}
-		
-		public function remove(s:String):void{
-			if (obj[s] != null) {
+
+		/**
+		 * 删除一个Key 
+		 * @param s
+		 * 
+		 */		
+		public function remove(s:String):void
+		{
+			if (obj[s] != null)
+			{
 				//if(obj[s])
 				arr.splice(obj[s], 1);
 				element.splice(obj[s], 1);
-				for (var i:int = obj[s];i < arr.length; i++) {
-					obj[arr[i]] -= 1;
+				for (var i:int = obj[s]; i < arr.length; i++)
+				{
+					obj[arr[i]]-=1;
 				}
 				delete obj[s];
 			}
 		}
-		public function get length():int{
+
+		/**
+		 * 获取元素数量 
+		 * @return 
+		 * 
+		 */		
+		public function get length():int
+		{
 			return arr.length;
 		}
-		
-		public function getbyindex(i:int):Object {
+
+		/**
+		 * 根据索引获取一个Key的value 
+		 * @param i
+		 * @return 
+		 * 
+		 */		
+		public function getbyindex(i:int):Object
+		{
 			return arr[i];
 		}
-		public function toString():String{
+
+		public function toString():String
+		{
 			return arr.toString();
 		}
 	}
-	
+
 }

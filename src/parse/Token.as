@@ -23,10 +23,11 @@ THE SOFTWARE.
 
 http://code.google.com/p/ascript-as3/
 http://ascript.softplat.com/
-*/       
+*/
 
 package parse
 {
+
 	//
 	/**
 	 * @author dayu
@@ -34,54 +35,130 @@ package parse
 	 */
 	public class Token
 	{
-		public var type:int;//
-		public var value:*;	//当类型为常量，则为其值
-							//当类型为ident和操作符或界符，则为其单词
-							//当类型为关键字，则为其单词，
+		/**
+		 * 类型 
+		 */		
+		public var type:int; //
+		
+		/**
+		 * 值
+		 * 当类型为常量，则为其值
+		 * 当类型为ident和操作符或界符，则为其单词
+		 * 当类型为关键字，则为其单词 
+		 */		
+		public var value:*; //
+		
+		/**
+		 * 串中的词 
+		 */		
 		public var word:String;
+		
+		/**
+		 * 行索引 
+		 */		
 		public var line:int=0;
+		
+		/**
+		 * 串 
+		 */		
 		internal var linestr:String="";
-		public function getLine():String{
+
+		public function getLine():String
+		{
 			return linestr;
 		}
+		
+		/**
+		 * 串索引 
+		 */		
 		public var index:int;
-		//
-		public static var wordpatten:String="|as|is|instanceof|extends|in|package|for|var|new|class|function|if|else|while|return|import|public|private|protected|switch|case|break|continue|default|try|catch|finally|each|";
-		public function Token(){
+		
+		/**
+		 * 关键字列表 
+		 */
+		public static var wordpatten:String=
+			"|as|is|instanceof|extends|in|package|for|var|new|class|function|if|else|while|return|import|public|private|protected|switch|case|break|continue|default|try|catch|finally|each|";
+
+		public function Token()
+		{
 		}
-		static public function iskeyword(str:String):Boolean{
-			if(Token.wordpatten.indexOf("|"+str+"|")>=0){
+
+		/**
+		 * 判断一个字符串是否是关键字 
+		 * @param str
+		 * @return 
+		 * 
+		 */		
+		static public function iskeyword(str:String):Boolean
+		{
+			if (Token.wordpatten.indexOf("|" + str + "|") >= 0)
+			{
 				return true;
 			}
 			return false;
 		}
-		static public function getTypeName(str:String):String{
-			if(iskeyword(str)){
-				return "TokenType.key"+str;
+
+		/**
+		 * 获取一个标记的类型描述 
+		 * @param str
+		 * @return 
+		 * 
+		 */		
+		static public function getTypeName(str:String):String
+		{
+			if (iskeyword(str))
+			{
+				return "TokenType.key" + str;
 			}
-			return "TokenType."+getDec(str);
+			return "TokenType." + getDec(str);
 		}
-		//获取分隔符
-		static public function getDec(str:String):String{
-			if(str=="("){
+
+		/**
+		 * 获取一个分隔符的描述 
+		 * @param str
+		 * @return 
+		 * 
+		 */		
+		static public function getDec(str:String):String
+		{
+			if (str == "(")
+			{
 				return "LParent";
-			}else if(str==")"){
+			}
+			else if (str == ")")
+			{
 				return "RParent";
-			}else if(str=="{"){
+			}
+			else if (str == "{")
+			{
 				return "LBRACE";
-			}else if(str=="}"){
+			}
+			else if (str == "}")
+			{
 				return "RBRACE";
-			}else if(str=="["){
+			}
+			else if (str == "[")
+			{
 				return "LBRACKET";
-			}else if(str=="]"){
+			}
+			else if (str == "]")
+			{
 				return "RBRACKET";
-			}else if(str=="."){
+			}
+			else if (str == ".")
+			{
 				return "DOT";
-			}else if(str==","){
+			}
+			else if (str == ",")
+			{
 				return "COMMA";
-			}else if(str==";"){
+			}
+			else if (str == ";")
+			{
 				return "Semicolon";
-			}else if(str==":"){
+			}
+			else if (str == ":")
+			{
 				return "Colon";
 			}
 			return str;

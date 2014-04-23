@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 http://code.google.com/p/ascript-as3/
 http://ascript.softplat.com/
-*/       
+*/
 package parser
 {
 	import parse.Token;
@@ -34,71 +34,97 @@ package parser
 		public var childs:Vector.<GNode> = new Vector.<GNode>;
 		public var token:Token;
 		//
-		public var gtype:int;	//GNodeType 
-		public var vartype:String="dynamic";//用于标明变量类型int char float//dynamic
+		public var gtype:int; //GNodeType 
+		public var vartype:String="dynamic"; //用于标明变量类型int char float//dynamic
 		public var word:String;
-		public var vis:String="protected";//可见性
-		public function GNode(n:int=-1,v:Token=null)
+		public var vis:String="protected"; //可见性
+
+		public function GNode(n:int=-1, v:Token=null)
 		{
-			if(n>-1){
+			if (n > -1)
+			{
 				gtype=n;
 				token=v;
-				if(n!=GNodeType.IDENT){
-					if(token){
+				if (n != GNodeType.IDENT)
+				{
+					if (token)
+					{
 						//throw new Error("语法分析错误");
 						word=token.word;
 					}
 				}
 			}
 		}
-			
+
 		//常量会有
 		[inline]
-		public function get value():*{
-			if(token){
+		public function get value():*
+		{
+			if (token)
+			{
 				return token.value;
 			}
 			return null;
 		}
+
 		//第几行
-		public function get line():int{
+		public function get line():int
+		{
 			return token.line;
 		}
+
 		//
 		[inline]
-		public function get nodeType():int{
+		public function get nodeType():int
+		{
 			return gtype;
 		}
+
 		//只有class,varst和func存在name,varID,constID是否需要存在，目前还没想好
-		public function get name():String{
-			if(nodeType==GNodeType.AssignStm){
+		public function get name():String
+		{
+			if (nodeType == GNodeType.AssignStm)
+			{
 				return childs[0].name;
 			}
-			if(token){
+			if (token)
+			{
 				return token.word;
 			}
 			return null;
 		}
-		public function addChild(node:GNode):void{
+
+		public function addChild(node:GNode):void
+		{
 			childs.push(node);
 		}
 		static public var lev:int=0;
-		static private var levs:Array=["","-","--","---","----","-----","------","--------","--------","---------","----------","-----------","------------","-------------","--------------","---------------","----------------"];
-		public function toString():String{
+		static private var levs:Array=
+			["", "-", "--", "---", "----", "-----", "------", "--------", "--------", "---------", "----------", "-----------", "------------", "-------------", "--------------", "---------------",
+			"----------------"];
+
+		public function toString():String
+		{
 			var str:String=GNodeType.getName(this.gtype);
-			if(this.token){
-				str+=" "+this.token.value;
-				if(gtype==GNodeType.VarDecl || gtype==GNodeType.FunDecl){
-					str=this.vis+" "+this.vartype+" "+str;
+			if (this.token)
+			{
+				str+=" " + this.token.value;
+				if (gtype == GNodeType.VarDecl || gtype == GNodeType.FunDecl)
+				{
+					str=this.vis + " " + this.vartype + " " + str;
 				}
 			}
-			str=levs[lev]+str+"\n";
+			str=levs[lev] + str + "\n";
 			lev++;
-			for each(var o:GNode in this.childs){
-				if(o is GNode){
+			for each (var o:GNode in this.childs)
+			{
+				if (o is GNode)
+				{
 					str+=(o as GNode).toString();
-				}else{
-					str+="=======>"+o.toString();
+				}
+				else
+				{
+					str+="=======>" + o.toString();
 				}
 			}
 			lev--;

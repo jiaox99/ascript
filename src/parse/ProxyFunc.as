@@ -23,59 +23,95 @@ THE SOFTWARE.
 
 http://code.google.com/p/ascript-as3/
 http://ascript.softplat.com/
-*/       
+*/
 
 package parse
 {
 	import flash.events.Event;
 	import flash.utils.Dictionary;
-	
+
 	import parser.DY;
 	import parser.GNode;
 	import parser.GenTree;
-	
+
 	public class ProxyFunc
 	{
 		static private var dics:Dictionary=new Dictionary();
-		static public function getAFunc(_it:DY,fn:String):*{
-			if(!dics[_it]){
+
+		/**
+		 * 获取一个代理函数 
+		 * @param _it
+		 * @param fn
+		 * @return 
+		 * 
+		 */		
+		static public function getAFunc(_it:DY, fn:String):*
+		{
+			if (!dics[_it])
+			{
 				dics[_it]=new Dictionary();
 			}
-			if(!dics[_it][fn]){
-				dics[_it][fn]=new ProxyFunc(_it,fn);
+			if (!dics[_it][fn])
+			{
+				dics[_it][fn]=new ProxyFunc(_it, fn);
 			}
 			return dics[_it][fn].Func;
 		}
 		//
-		private var it:DY;//首先明确是哪个脚本类的哪个方法
-		private var funcname:String;//这是it监听函数名。
+		private var it:DY; //首先明确是哪个脚本类的哪个方法
+		private var funcname:String; //这是it监听函数名。
 		private var Func:Function;
-		
-		public function ProxyFunc(_it:DY,fn:String)
+
+		public function ProxyFunc(_it:DY, fn:String)
 		{
 			it=_it;
 			funcname=fn;
 			//为了兼容starling,修改了一下返回函数...分为带1参数和其他，2013.9.14
-			if((_it._rootnode.motheds[fn] as GNode).childs[0].childs.length==1){
+			if ((_it._rootnode.motheds[fn] as GNode).childs[0].childs.length == 1)
+			{
 				Func=this.Func1;
-			}else{
+			}
+			else
+			{
 				Func=this.FuncN;
 			}
 		}
+
 		//=================
-		public function Func1(arg1:*):*{
-			try{
+		/**
+		 * 一个参数 
+		 * @param arg1
+		 * @return 
+		 * 
+		 */		
+		public function Func1(arg1:*):*
+		{
+			try
+			{
 				//trace(it._rootnode.name+" call "+funcname+"("+args+")")
-				return it.call(funcname,[arg1]);
-			}catch(e:Error){
+				return it.call(funcname, [arg1]);
+			}
+			catch (e:Error)
+			{
 				trace(e.getStackTrace());
 			}
 		};
-		public function FuncN(...args):*{
-			try{
+
+		/**
+		 * 任意个参数 
+		 * @param args
+		 * @return 
+		 * 
+		 */		
+		public function FuncN(... args):*
+		{
+			try
+			{
 				//trace(it._rootnode.name+" call "+funcname+"("+args+")")
-				return it.call(funcname,args);
-			}catch(e:Error){
+				return it.call(funcname, args);
+			}
+			catch (e:Error)
+			{
 				trace(e.getStackTrace());
 			}
 		};

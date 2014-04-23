@@ -34,16 +34,22 @@ package parse
 	 * @author dayu
 	 * 词法分析，生成一个个代码单词
 	 */
-	public class Lex extends EventDispatcher{
-		private var str:String;
-		private var line:int;//记录当前分析的行
-		private var lines:Array;//
-		private var ptr:uint;//当前指针
+	public class Lex extends EventDispatcher
+	{
 		public var words:Array;//一个文件最终被分成单词。
+		
+		/**
+		 * 缓存 
+		 */		
+		static public var treecach:Dictionary=new Dictionary();
+		
+		private var str:String;//代码串
+		private var line:int;//记录当前分析的行
+		private var lines:Array;//分隔后的行数组
+		private var ptr:uint;//当前串索引指针
 		private var word:String;//当前正在分析的串
 		private var ch:String;//当前字符
 		private var loadnew:Boolean=false;
-		static public var treecach:Dictionary=new Dictionary();
 		private var undot:Boolean=false;//是否忽略dot
 		
 		public function Lex(_str:String=null,_undot:Boolean=false){
@@ -76,10 +82,16 @@ package parse
 				}
 			}
 		}
+		
+		/**
+		 * 跳过可以忽略不用分析的部分 
+		 * 
+		 */		
 		private function skipIgnored():void {
 			skipWhite();
 			var c:int=0;
-			while(skipComments() && c<40){
+			while(skipComments() && c<40)//TODO:后台的判断的作用不知有什么作用
+			{
 				c++;
 				skipWhite();
 			}
@@ -90,6 +102,7 @@ package parse
 		 * Skips comments in the input string, either
 		 * single-line or multi-line.  Advances the character
 		 * to the first position after the end of the comment.
+		 * 跳过注释
 		 */
 		private function skipComments():Boolean {
 			var re:Boolean=false;
@@ -159,6 +172,7 @@ package parse
 		 * Skip any whitespace in the input string and advances
 		 * the character to the first character after any possible
 		 * whitespace.
+		 * 跳过空白
 		 */
 		private function skipWhite():void {
 			
@@ -178,13 +192,22 @@ package parse
 		/**
 		 * Determines if a character is whitespace or not.
 		 *
+		 * 判断是否是空白字符
 		 * @return True if the character passed in is a whitespace
 		 *	character
 		 */
-		private function isWhiteSpace( ch:String ):Boolean {
+		private function isWhiteSpace( ch:String ):Boolean
+		{
 			return (ch==' ' || ch == '　' || ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n');
 		}
-		private function getNextWord():Token{
+		
+		/**
+		 * 获取下一个标记 
+		 * @return 
+		 * 
+		 */		
+		private function getNextWord():Token
+		{
 			skipIgnored();
 			var token:Token=new Token();
 			// examine the new character and see what we have...
@@ -513,6 +536,13 @@ package parse
 			}
 			return token;
 		}
+		
+		/**
+		 * 是否是16进制数字 
+		 * @param ch
+		 * @return 
+		 * 
+		 */		
 		private function isHexDigit( ch:String ):Boolean {
 			// get the uppercase value of ch so we only have to compare the value between 'A' and 'F'
 			var uc:String = ch.toUpperCase();
@@ -525,6 +555,7 @@ package parse
 		 * the character location at the first character after the
 		 * string.  It is assumed that ch is " before this method is called.
 		 *
+		 * 读取一个字符串
 		 * @return the JSONToken with the string value if a string could
 		 *		be read.  Throws an error otherwise.
 		 */
@@ -585,6 +616,12 @@ package parse
 			// attach to the string to the token so we can return it
 			return s;
 		}
+		
+		/**
+		 * 读取下一个字符 
+		 * @return 
+		 * 
+		 */		
 		private function nextChar():String{
 			ch=str.charAt(ptr++);
 			/*汉字的unicode编码范围
@@ -596,12 +633,22 @@ package parse
 		
 		/**
 		 * Determines if a character is a digit [0-9]
+		 * 判断是否是数字
 		 * @return True if the character passed in is a digit
 		 */
-		private function isDigit( ch:String ):Boolean {
+		private function isDigit( ch:String ):Boolean
+		{
 			return ( ch >= '0' && ch <= '9' );
 		}
-		private function isAlpha(c:String):Boolean{
+		
+		/**
+		 * 判断是否是字母（或汉字类单字） 
+		 * @param c
+		 * @return 
+		 * 
+		 */		
+		private function isAlpha(c:String):Boolean
+		{
 			var v:Number=c.charCodeAt(0);
 			if(undot &&　c=="."){
 				return true;
@@ -617,7 +664,14 @@ package parse
 			}
 			return false;
 		}
-		private function parseError( message:String ):void {
+		
+		/**
+		 * 出错 
+		 * @param message
+		 * 
+		 */		
+		private function parseError( message:String ):void
+		{
 			throw new Error(this.lines[this.line]+"词法分析出错:"+message+"当前位置="+ ptr);
 		}
 	}

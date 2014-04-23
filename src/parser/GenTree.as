@@ -23,17 +23,17 @@ THE SOFTWARE.
 
 http://code.google.com/p/ascript-as3/
 http://ascript.softplat.com/
-*/       
+*/
 
 package parser
 {
-	
+
 	import flash.utils.getDefinitionByName;
-	
+
 	import parse.Lex;
 	import parse.Token;
 	import parse.TokenType;
-	
+
 	//有语法树，直接就可以执行很多东西了。
 	public class GenTree
 	{
@@ -49,88 +49,113 @@ package parser
 		public var motheds:Object={};
 		//变量节点
 		public var fields:Object={};
-		
+
 		public var Package:String="";
+
 		//
-		
-		static public function hasScript(scname:String):Boolean{
-			if(Script.app.hasDefinition("flash.filesystem.FileStream")){
-				if(!Branch[scname]){
-                    var File:Class=getDefinitionByName("flash.filesystem.File") as Class;
-                    var FileStream:Class=getDefinitionByName("flash.filesystem.FileStream") as Class;
-                    var FileMode:Class=getDefinitionByName("flash.filesystem.FileMode") as Class;
-					var f:Object=File.applicationDirectory.resolvePath(Script.scriptdir+scname+".as");
-					if(f.exists){
+
+		static public function hasScript(scname:String):Boolean
+		{
+			if (Script.app.hasDefinition("flash.filesystem.FileStream"))
+			{
+				if (!Branch[scname])
+				{
+					var File:Class=getDefinitionByName("flash.filesystem.File") as Class;
+					var FileStream:Class=getDefinitionByName("flash.filesystem.FileStream") as Class;
+					var FileMode:Class=getDefinitionByName("flash.filesystem.FileMode") as Class;
+					var f:Object=File.applicationDirectory.resolvePath(Script.scriptdir + scname + ".as");
+					if (f.exists)
+					{
 						//解析
 						var fs:Object=new FileStream();
-						fs.open(f,FileMode.READ);
+						fs.open(f, FileMode.READ);
 						var str:String=fs.readUTFBytes(f.size);
 						fs.close();
-						trace("load=="+scname);
+						trace("load==" + scname);
 						Script.LoadFromString(str);
-					}else{
-						trace(scname+"不存在");
+					}
+					else
+					{
+						trace(scname + "不存在");
 					}
 				}
 			}
-			if(Branch[scname]){
-				
+			if (Branch[scname])
+			{
+
 				return true;
 			}
 			return false;
 		}
+
 		function GenTree(code:String=null)
 		{
-			if(code){
+			if (code)
+			{
 				lex=new Lex(code);
 				index=0;
 				nextToken();
 				PACKAGE();
 				Branch[name]=this;
-				if(name!="____globalclass"){
-					trace("脚本类:"+name+"解析完成,可以创建其实例了");
+				if (name != "____globalclass")
+				{
+					trace("脚本类:" + name + "解析完成,可以创建其实例了");
 				}
 			}
 		}
-		public function toString():String{
+
+		public function toString():String
+		{
 			var str:String="";
-			str+="package"+Package+"{\r";
+			str+="package" + Package + "{\r";
 			var o:String;
 			var c:String;
 			//
-			for(o in imports){
-				str+="import "+o+";\r"
+			for (o in imports)
+			{
+				str+="import " + o + ";\r"
 			}
-			str+="class "+name+"{\r";
-			for(o in fields){
+			str+="class " + name + "{\r";
+			for (o in fields)
+			{
 				c=(fields[o] as GNode).toString();
 			}
-			for(o in motheds){
+			for (o in motheds)
+			{
 				c=(motheds[o] as GNode).toString();
-				str+=c+"\r";
-			}	
-			str+="}\r"	
+				str+=c + "\r";
+			}
+			str+="}\r"
 			str+="}";
-			return str.replace(/protected/g,"");
+			return str.replace(/protected/g, "");
 		}
+
 		//
-		public function declares(_lex:Lex):GNode{
+		public function declares(_lex:Lex):GNode
+		{
 			lex=_lex;
 			index=0;
 			nextToken();
 			var cnode:GNode=new GNode(GNodeType.Stms);
 			var tnode:GNode;
-			while(tok){
-				if(tok.type==TokenType.keyvar){
+			while (tok)
+			{
+				if (tok.type == TokenType.keyvar)
+				{
 					tnode=varst();
 					fields[tnode.name]=tnode;
 					cnode.addChild(tnode);
-				}else if(tok.type==TokenType.keyfunction){
+				}
+				else if (tok.type == TokenType.keyfunction)
+				{
 					tnode=func();
 					motheds[tnode.name]=tnode;
-				}else{
+				}
+				else
+				{
 					tnode=st();
-					if(tnode.name){
+					if (tnode.name)
+					{
 						fields[tnode.name]=tnode;
 					}
 					cnode.addChild(tnode);
@@ -138,58 +163,75 @@ package parser
 			}
 			return cnode;
 		}
-		public function declare(_lex:Lex):GNode{
+
+		public function declare(_lex:Lex):GNode
+		{
 			lex=_lex;
 			index=0;
 			nextToken();
-			
+
 			var cnode:GNode;
-			if(tok.type==TokenType.keyvar){
+			if (tok.type == TokenType.keyvar)
+			{
 				cnode=varst();
 				fields[cnode.name]=cnode;
-			}else if(tok.type==TokenType.keyfunction){
+			}
+			else if (tok.type == TokenType.keyfunction)
+			{
 				cnode=func();
 				motheds[cnode.name]=cnode;
-			}else if(tok.type==TokenType.LBRACE){
+			}
+			else if (tok.type == TokenType.LBRACE)
+			{
 				cnode=stlist();
-			}else{
+			}
+			else
+			{
 				cnode=st();
 			}
 			return cnode;
 		}
-		private function doimport():GNode{
+
+		private function doimport():GNode
+		{
 			match(TokenType.keyimport);
 			var vname_arr:Array=[];
 			vname_arr[0]=tok.word;
 			match(TokenType.ident);
 			//
-			while(tok.type==TokenType.DOT){
+			while (tok.type == TokenType.DOT)
+			{
 				match(TokenType.DOT);
-				vname_arr.push(tok.word);	
+				vname_arr.push(tok.word);
 				match(TokenType.ident);
 			}
 			var cnode:GNode=new GNode(GNodeType.importStm);
 			cnode.word=vname_arr.join(".");
-			API[vname_arr[vname_arr.length-1]]=Script.getDef(cnode.word);
-			
+			API[vname_arr[vname_arr.length - 1]]=Script.getDef(cnode.word);
+
 			imports[cnode.word]=true;
-			if(tok.type==TokenType.Semicolon){
+			if (tok.type == TokenType.Semicolon)
+			{
 				match(TokenType.Semicolon);
 			}
 			return cnode;
 		}
-		
-		private function PACKAGE():void{
-			if(tok.type==TokenType.keypackage){
+
+		private function PACKAGE():void
+		{
+			if (tok.type == TokenType.keypackage)
+			{
 				match(TokenType.keypackage);
-				if(tok.type==TokenType.ident){
+				if (tok.type == TokenType.ident)
+				{
 					var vname_arr:Array=[];
 					vname_arr[0]=tok.word;
 					match(TokenType.ident);
 					//
-					while(tok.type==TokenType.DOT){
+					while (tok.type == TokenType.DOT)
+					{
 						match(TokenType.DOT);
-						vname_arr.push(tok.word);	
+						vname_arr.push(tok.word);
 						match(TokenType.ident);
 					}
 					Package=vname_arr.join(".");
@@ -197,20 +239,27 @@ package parser
 				match(TokenType.LBRACE);
 				CLASS();
 				match(TokenType.RBRACE);
-			}else{
+			}
+			else
+			{
 				CLASS();
 			}
 		}
-		private function CLASS():void{
-			while(tok.type==TokenType.keyimport){
+
+		private function CLASS():void
+		{
+			while (tok.type == TokenType.keyimport)
+			{
 				doimport();
 			}
-			switch (tok.type){
+			switch (tok.type)
+			{
 				case TokenType.keyclass:
 					match(TokenType.keyclass);
 					name=tok.word;
 					match(TokenType.ident);
-					if(tok.type==TokenType.keyextends){
+					if (tok.type == TokenType.keyextends)
+					{
 						match(TokenType.keyextends);
 						match(TokenType.ident);
 					}
@@ -221,52 +270,70 @@ package parser
 				default:
 					error();
 			}
-		
+
 		}
-		private function DecList():void{
+
+		private function DecList():void
+		{
 			var cnode:GNode;
-			while(tok.type==TokenType.keyimport || tok.type==TokenType.keyvar || tok.type==TokenType.keyfunction || tok.type==TokenType.keypublic || tok.type==TokenType.keyprivate || tok.type==TokenType.keyprotected){
-				
-				if(tok.type==TokenType.keyimport){
+			while (tok.type == TokenType.keyimport || tok.type == TokenType.keyvar || tok.type == TokenType.keyfunction || tok.type == TokenType.keypublic || tok.type == TokenType.keyprivate ||
+				tok.type == TokenType.keyprotected)
+			{
+
+				if (tok.type == TokenType.keyimport)
+				{
 					doimport();
-				} else if(tok.type==TokenType.keyvar){
+				}
+				else if (tok.type == TokenType.keyvar)
+				{
 					cnode=varst();
 					fields[cnode.name]=cnode;
-				}else if(tok.type==TokenType.keyfunction){
+				}
+				else if (tok.type == TokenType.keyfunction)
+				{
 					cnode=func();
 					motheds[cnode.name]=cnode;
-				}else{
+				}
+				else
+				{
 					var vis:String=tok.word;
 					nextToken();
-					if(tok.type==TokenType.keyvar){
+					if (tok.type == TokenType.keyvar)
+					{
 						cnode=varst();
 						fields[cnode.name]=cnode;
-					}else if(tok.type==TokenType.keyfunction){
+					}
+					else if (tok.type == TokenType.keyfunction)
+					{
 						cnode=func();
 						motheds[cnode.name]=cnode;
 					}
-					cnode.vis=vis;//可见性设置
+					cnode.vis=vis; //可见性设置
 				}
 			}
 		}
-		private function func():GNode{
-			switch (tok.type){
+
+		private function func():GNode
+		{
+			switch (tok.type)
+			{
 				case TokenType.keyfunction:
 					match(TokenType.keyfunction);
-					var cnode:GNode=new GNode(GNodeType.FunDecl,tok);
-					cnode.vartype="void";//函数默认的为无返回类型
+					var cnode:GNode=new GNode(GNodeType.FunDecl, tok);
+					cnode.vartype="void"; //函数默认的为无返回类型
 					//
 					match(TokenType.ident);
 					match(TokenType.LParent);
 					cnode.addChild(ParamList());
 					match(TokenType.RParent);
 					//------------
-					if(tok.type==TokenType.Colon){
+					if (tok.type == TokenType.Colon)
+					{
 						//如果考虑语法解析的话。。。
 						match(TokenType.Colon);
-						cnode.vartype=tok.word;//变量类型
-						match(tok.type);//可能为*或者ident
-						//match(TokenType.ident);
+						cnode.vartype=tok.word; //变量类型
+						match(tok.type); //可能为*或者ident
+							//match(TokenType.ident);
 					}
 					cnode.addChild(stlist());
 					return cnode;
@@ -276,29 +343,35 @@ package parser
 			}
 			return null;
 		}
-		private function ParamList():GNode{
+
+		private function ParamList():GNode
+		{
 			var cnode:GNode=new GNode(GNodeType.Params);
-			switch (tok.type){
+			switch (tok.type)
+			{
 				case TokenType.ident:
-					cnode.addChild(new GNode(GNodeType.VarID,tok));
+					cnode.addChild(new GNode(GNodeType.VarID, tok));
 					match(TokenType.ident);
-					if(tok.type==TokenType.Colon){
+					if (tok.type == TokenType.Colon)
+					{
 						//如果考虑语法解析的话。。。
 						match(TokenType.Colon);
 						cnode.vartype=tok.word;
 						match(tok.type);
-						//match(TokenType.ident);
+							//match(TokenType.ident);
 					}
-					while(tok.type==TokenType.COMMA){
+					while (tok.type == TokenType.COMMA)
+					{
 						match(TokenType.COMMA);
-						cnode.addChild(new GNode(GNodeType.VarID,tok));
+						cnode.addChild(new GNode(GNodeType.VarID, tok));
 						match(TokenType.ident);
-						if(tok.type==TokenType.Colon){
+						if (tok.type == TokenType.Colon)
+						{
 							//如果考虑语法解析的话。。。
 							match(TokenType.Colon);
 							cnode.vartype=tok.word;
-							match(tok.type);	
-							//match(TokenType.ident);
+							match(tok.type);
+								//match(TokenType.ident);
 						}
 					}
 					break;
@@ -309,12 +382,16 @@ package parser
 			}
 			return cnode;
 		}
-		private function stlist():GNode{
+
+		private function stlist():GNode
+		{
 			var cnode:GNode=new GNode(GNodeType.Stms);
-			switch (tok.type){
+			switch (tok.type)
+			{
 				case TokenType.LBRACE:
 					match(TokenType.LBRACE);
-					while(tok.type!=TokenType.RBRACE){
+					while (tok.type != TokenType.RBRACE)
+					{
 						cnode.addChild(st());
 					}
 					match(TokenType.RBRACE);
@@ -324,10 +401,13 @@ package parser
 			}
 			return cnode;
 		}
-		private function st():GNode{
+
+		private function st():GNode
+		{
 			var cnode:GNode;
 			var tnode:GNode;
-			switch (tok.type){
+			switch (tok.type)
+			{
 				case TokenType.keyif:
 					//总的，
 					cnode=new GNode(GNodeType.IfElseStm);
@@ -338,20 +418,24 @@ package parser
 					match(TokenType.RParent);
 					tnode.addChild(stlist());
 					cnode.addChild(tnode);
-					
-					while(tok.type==TokenType.keyelse){
+
+					while (tok.type == TokenType.keyelse)
+					{
 						match(TokenType.keyelse);
-						if(tok.type==TokenType.keyif){
+						if (tok.type == TokenType.keyif)
+						{
 							//else if
 							match(TokenType.keyif);
-							
+
 							tnode=new GNode(GNodeType.ELSEIF);
 							match(TokenType.LParent);
 							tnode.addChild(EXP());
 							match(TokenType.RParent);
 							tnode.addChild(stlist());
 							cnode.addChild(tnode);
-						}else{
+						}
+						else
+						{
 							//else
 							cnode.addChild(stlist());
 						}
@@ -361,52 +445,67 @@ package parser
 				case TokenType.keyfor:
 					match(TokenType.keyfor);
 					//for each
-					if(tok.type==TokenType.keyeach){
+					if (tok.type == TokenType.keyeach)
+					{
 						match(TokenType.keyeach);
 						match(TokenType.LParent);
 						cnode=new GNode(GNodeType.ForEACHStm);
-						if(tok.type==TokenType.keyvar){
+						if (tok.type == TokenType.keyvar)
+						{
 							match(TokenType.keyvar);
 						}
-						if(tok.type==TokenType.ident){
-							cnode.addChild(new GNode(GNodeType.VarDecl,tok));
+						if (tok.type == TokenType.ident)
+						{
+							cnode.addChild(new GNode(GNodeType.VarDecl, tok));
 							match(TokenType.ident);
-							if(tok.type==TokenType.Colon){
+							if (tok.type == TokenType.Colon)
+							{
 								match(TokenType.Colon);
 								cnode.childs[0].vartype=tok.word;
 								match(tok.type);
-								//match(TokenType.ident);
+									//match(TokenType.ident);
 							}
-							match(TokenType.COP,"in");
-							
+							match(TokenType.COP, "in");
+
 							cnode.addChild(EXP());
 							match(TokenType.RParent);
 							cnode.addChild(stlist());
-						}else{
+						}
+						else
+						{
 							throw Error("for each 匹配失败");
 						}
-					}else{
+					}
+					else
+					{
 						//2种情况，一种是for in
 						//一种是数组循环
 						match(TokenType.LParent);
-						if(lex.words[index+1].type==TokenType.COP || lex.words[index+2].type==TokenType.COP){
+						if (lex.words[index + 1].type == TokenType.COP || lex.words[index + 2].type == TokenType.COP)
+						{
 							cnode=new GNode(GNodeType.ForInStm);
-							if(tok.type==TokenType.keyvar){
+							if (tok.type == TokenType.keyvar)
+							{
 								match(TokenType.keyvar);
 							}
-							if(tok.type==TokenType.ident){
-								cnode.addChild(new GNode(GNodeType.VarDecl,tok));
+							if (tok.type == TokenType.ident)
+							{
+								cnode.addChild(new GNode(GNodeType.VarDecl, tok));
 								match(TokenType.ident);
 								//
-								match(TokenType.COP,"in");
-								
+								match(TokenType.COP, "in");
+
 								cnode.addChild(EXP());
 								match(TokenType.RParent);
 								cnode.addChild(stlist());
-							}else{
+							}
+							else
+							{
 								throw Error("for in 匹配失败");
 							}
-						}else{
+						}
+						else
+						{
 							cnode=new GNode(GNodeType.ForStm);
 							cnode.addChild(st());
 							cnode.addChild(EXP());
@@ -430,32 +529,40 @@ package parser
 				case TokenType.keytry:
 					cnode=new GNode(GNodeType.TRY);
 					match(TokenType.keytry);
-					cnode.addChild(stlist());//第一节点为执行部分
-					if(tok.type==TokenType.keycatch){
+					cnode.addChild(stlist()); //第一节点为执行部分
+					if (tok.type == TokenType.keycatch)
+					{
 						tnode=new GNode(GNodeType.CATCH);
-						match(TokenType.keycatch);//捕获错误
+						match(TokenType.keycatch); //捕获错误
 						match(TokenType.LParent);
-						if(tok.type==TokenType.ident){
-							var tempnode:GNode=new GNode(GNodeType.VarID,tok);
+						if (tok.type == TokenType.ident)
+						{
+							var tempnode:GNode=new GNode(GNodeType.VarID, tok);
 							tnode.addChild(tempnode);
 							match(TokenType.ident);
-							if(tok.type==TokenType.Colon){//如果考虑语法解析的话。。。
+							if (tok.type == TokenType.Colon)
+							{ //如果考虑语法解析的话。。。
 								match(TokenType.Colon);
 								tempnode.vartype=tok.word;
 								//match(TokenType.ident);
 								match(tok.type);
 							}
-						}else{
+						}
+						else
+						{
 							error();
 						}
 						match(TokenType.RParent);
 						tnode.addChild(stlist());
-						cnode.addChild(tnode);//第2节点为捕获部分
-						if(tok.type==TokenType.keyfinally){
-							match(TokenType.keyfinally);//无论如何也要执行的
-							cnode.addChild(stlist());//第2节点为捕获部分
+						cnode.addChild(tnode); //第2节点为捕获部分
+						if (tok.type == TokenType.keyfinally)
+						{
+							match(TokenType.keyfinally); //无论如何也要执行的
+							cnode.addChild(stlist()); //第2节点为捕获部分
 						}
-					}else{
+					}
+					else
+					{
 						error();
 					}
 					return cnode;
@@ -464,37 +571,43 @@ package parser
 					cnode=new GNode(GNodeType.SWITCH);
 					match(TokenType.keyswitch);
 					match(TokenType.LParent);
-					cnode.addChild(EXP());//第一个节点为所需要判断的表达式
+					cnode.addChild(EXP()); //第一个节点为所需要判断的表达式
 					match(TokenType.RParent);
 					match(TokenType.LBRACE);
 					//
-					var ccc:int=0;//计数器，避免脚本分析陷入死循环
-					while(tok.type==TokenType.keycase){
+					var ccc:int=0; //计数器，避免脚本分析陷入死循环
+					while (tok.type == TokenType.keycase)
+					{
 						tnode=new GNode(GNodeType.CASE);
 						match(TokenType.keycase);
-						tnode.addChild(EXP());//第一个节点为所需要判断的表达式
+						tnode.addChild(EXP()); //第一个节点为所需要判断的表达式
 						match(TokenType.Colon);
 						//tnode.addChild(new GNode(GNodeType.Stms));
 						ccc=0;
-						while(tok.type!=TokenType.keycase && tok.type!=TokenType.keydefault && tok.type!=TokenType.RBRACE){
+						while (tok.type != TokenType.keycase && tok.type != TokenType.keydefault && tok.type != TokenType.RBRACE)
+						{
 							ccc++;
-							if(tnode==null){
+							if (tnode == null)
+							{
 								trace("分析case出现严重错误");
 							}
 							tnode.addChild(st());
-							
-							if(ccc>200){
+
+							if (ccc > 200)
+							{
 								trace("分析case结构陷入死循环，请查看case部分代码");
 								break;
 							}
 						}
 						cnode.addChild(tnode);
 					}
-					if(tok.type==TokenType.keydefault){
+					if (tok.type == TokenType.keydefault)
+					{
 						tnode=new GNode(GNodeType.DEFAULT);
 						match(TokenType.keydefault);
 						match(TokenType.Colon);
-						while(tok.type!=TokenType.RBRACE){
+						while (tok.type != TokenType.RBRACE)
+						{
 							tnode.addChild(st());
 						}
 						cnode.addChild(tnode);
@@ -503,27 +616,32 @@ package parser
 					return cnode;
 					break;
 				case TokenType.keyvar:
-					
+
 					return varst();
 					break;
 				case TokenType.ident:
 					//2种情况需要分别处理,赋值语句和EXP
 					var tindex:int=index;
 					tnode=IDENT();
-					if(tok.type==TokenType.Assign){
-						cnode=new GNode(GNodeType.AssignStm,tok);
+					if (tok.type == TokenType.Assign)
+					{
+						cnode=new GNode(GNodeType.AssignStm, tok);
 						cnode.addChild(tnode);
 						match(TokenType.Assign);
 						cnode.addChild(EXP());
-						if(tok.type==TokenType.Semicolon){
+						if (tok.type == TokenType.Semicolon)
+						{
 							match(TokenType.Semicolon);
 						}
-					}else{
+					}
+					else
+					{
 						//就是个表达式
-						index=tindex-1;
+						index=tindex - 1;
 						nextToken();
 						cnode=EXP();
-						if(tok && tok.type==TokenType.Semicolon){
+						if (tok && tok.type == TokenType.Semicolon)
+						{
 							match(TokenType.Semicolon);
 						}
 					}
@@ -535,24 +653,28 @@ package parser
 				case TokenType.LOPNot:
 				case TokenType.INCREMENT:
 					cnode=EXP();
-					if(tok.type==TokenType.Semicolon){
+					if (tok.type == TokenType.Semicolon)
+					{
 						match(TokenType.Semicolon);
 					}
 					return cnode;
 					break;
 				case TokenType.MOP:
-					if(tok.word=="-"){
+					if (tok.word == "-")
+					{
 						cnode=EXP();
-						if(tok.type==TokenType.Semicolon){
+						if (tok.type == TokenType.Semicolon)
+						{
 							match(TokenType.Semicolon);
 						}
 						return cnode;
 					}
 					break;
 				case TokenType.keyreturn:
-					cnode=new GNode(GNodeType.ReturnStm,tok);
+					cnode=new GNode(GNodeType.ReturnStm, tok);
 					match(TokenType.keyreturn);
-					if(tok.type!=TokenType.Semicolon){
+					if (tok.type != TokenType.Semicolon)
+					{
 						cnode.addChild(EXP());
 					}
 					match(TokenType.Semicolon);
@@ -565,7 +687,8 @@ package parser
 					cnode=new GNode(GNodeType.CONTINUE);
 					cnode.word=tok.word;
 					match(TokenType.keycontinue);
-					if(tok.type==TokenType.Semicolon){
+					if (tok.type == TokenType.Semicolon)
+					{
 						match(TokenType.Semicolon);
 					}
 					return cnode;
@@ -574,41 +697,49 @@ package parser
 					cnode=new GNode(GNodeType.BREAK);
 					cnode.word=tok.word;
 					match(TokenType.keybreak);
-					if(tok.type==TokenType.Semicolon){
+					if (tok.type == TokenType.Semicolon)
+					{
 						match(TokenType.Semicolon);
 					}
 					return cnode;
 					break;
 				default:
-					
+
 					error();
 			}
 			return null;
 		}
-		private function varst():GNode{
-			switch (tok.type){
+
+		private function varst():GNode
+		{
+			switch (tok.type)
+			{
 				case TokenType.keyvar:
 					match(TokenType.keyvar);
-					var tnode:GNode=new GNode(GNodeType.VarDecl,tok);
+					var tnode:GNode=new GNode(GNodeType.VarDecl, tok);
 					match(TokenType.ident);
-					if(tok.type==TokenType.Colon){
+					if (tok.type == TokenType.Colon)
+					{
 						//如果考虑语法解析的话。。。
 						match(TokenType.Colon);
-						tnode.vartype=tok.word;//变量类型
+						tnode.vartype=tok.word; //变量类型
 						match(tok.type);
-						//match(TokenType.ident);
+							//match(TokenType.ident);
 					}
-					if(tok.type==TokenType.Assign){
-						var cnode:GNode=new GNode(GNodeType.AssignStm,tok);
+					if (tok.type == TokenType.Assign)
+					{
+						var cnode:GNode=new GNode(GNodeType.AssignStm, tok);
 						match(TokenType.Assign);
 						cnode.addChild(tnode);
 						cnode.addChild(EXP());
-						if(tok.type==TokenType.Semicolon){
+						if (tok.type == TokenType.Semicolon)
+						{
 							match(TokenType.Semicolon);
 						}
 						return cnode;
 					}
-					if(tok && tok.type==TokenType.Semicolon){
+					if (tok && tok.type == TokenType.Semicolon)
+					{
 						match(TokenType.Semicolon);
 					}
 					return tnode;
@@ -618,10 +749,13 @@ package parser
 			}
 			return null;
 		}
-		private function EXP():GNode{
+
+		private function EXP():GNode
+		{
 			var tnode:GNode;
 			var cnode:GNode;
-			switch (tok.type){
+			switch (tok.type)
+			{
 				case TokenType.ident:
 				case TokenType.constant:
 				case TokenType.LParent:
@@ -629,26 +763,33 @@ package parser
 				case TokenType.LOPNot:
 				case TokenType.INCREMENT:
 					tnode=Term();
-					if(tok && tok.type==TokenType.LOP){
-						cnode=new GNode(GNodeType.LOP,tok);	
+					if (tok && tok.type == TokenType.LOP)
+					{
+						cnode=new GNode(GNodeType.LOP, tok);
 						match(TokenType.LOP);
 						cnode.addChild(tnode);
 						cnode.addChild(EXP());
 						return cnode;
-					}else{
+					}
+					else
+					{
 						return tnode;
 					}
 					break;
 				case TokenType.MOP:
-					if(tok.word=="-"){
+					if (tok.word == "-")
+					{
 						tnode=Term();
-						if(tok.type==TokenType.LOP){
-							cnode=new GNode(GNodeType.LOP,tok);	
+						if (tok.type == TokenType.LOP)
+						{
+							cnode=new GNode(GNodeType.LOP, tok);
 							match(TokenType.LOP);
 							cnode.addChild(tnode);
 							cnode.addChild(EXP());
 							return cnode;
-						}else{
+						}
+						else
+						{
 							return tnode;
 						}
 					}
@@ -656,7 +797,8 @@ package parser
 				case TokenType.LBRACKET:
 					match(TokenType.LBRACKET);
 					tnode=new GNode(GNodeType.newArray);
-					if(tok.type!=TokenType.RBRACKET){
+					if (tok.type != TokenType.RBRACKET)
+					{
 						tnode.addChild(EXPList());
 					}
 					match(TokenType.RBRACKET);
@@ -664,28 +806,34 @@ package parser
 				case TokenType.LBRACE:
 					match(TokenType.LBRACE);
 					tnode=new GNode(GNodeType.newObject);
-					if(tok.type==TokenType.RBRACE){
+					if (tok.type == TokenType.RBRACE)
+					{
 						match(TokenType.RBRACE);
 						return tnode;
 					}
-					do{
-						if(tok.type==TokenType.COMMA){
+					do
+					{
+						if (tok.type == TokenType.COMMA)
+						{
 							match(TokenType.COMMA);
 						}
-						var cn:GNode=new GNode(GNodeType.VarID,tok);
+						var cn:GNode=new GNode(GNodeType.VarID, tok);
 						cn.word=tok.word;
 						tnode.addChild(cn);
 						match(TokenType.ident);
 						match(TokenType.Colon);
 						//
-						if(tok.type==TokenType.COMMA || tok.type==TokenType.RBRACE){
+						if (tok.type == TokenType.COMMA || tok.type == TokenType.RBRACE)
+						{
 							var tk:Token=new Token();
 							tk.value="";
-							tnode.addChild(new GNode(GNodeType.ConstID,tk));
-						}else{
+							tnode.addChild(new GNode(GNodeType.ConstID, tk));
+						}
+						else
+						{
 							tnode.addChild(EXP());
 						}
-					}while(tok.type==TokenType.COMMA)
+					} while (tok.type == TokenType.COMMA)
 					match(TokenType.RBRACE);
 					return tnode;
 					break;
@@ -694,9 +842,12 @@ package parser
 			}
 			return null;
 		}
-		private function EXPList():GNode{
-			var cnode:GNode=new GNode(GNodeType.EXPS);	
-			switch (tok.type){
+
+		private function EXPList():GNode
+		{
+			var cnode:GNode=new GNode(GNodeType.EXPS);
+			switch (tok.type)
+			{
 				case TokenType.ident:
 				case TokenType.constant:
 				case TokenType.LParent:
@@ -705,18 +856,21 @@ package parser
 				case TokenType.INCREMENT:
 				case TokenType.LBRACKET:
 				case TokenType.LBRACE:
-					
+
 					cnode.addChild(EXP());
-					while(tok.type==TokenType.COMMA){
+					while (tok.type == TokenType.COMMA)
+					{
 						match(TokenType.COMMA);
 						cnode.addChild(EXP());
 					}
 					return cnode;
 					break;
 				case TokenType.MOP:
-					if(tok.word=="-"){
+					if (tok.word == "-")
+					{
 						cnode.addChild(EXP());
-						while(tok.type==TokenType.COMMA){
+						while (tok.type == TokenType.COMMA)
+						{
 							match(TokenType.COMMA);
 							cnode.addChild(EXP());
 						}
@@ -728,11 +882,13 @@ package parser
 			}
 			return null;
 		}
-		
-		private function Term():GNode{
+
+		private function Term():GNode
+		{
 			var tnode:GNode;
 			var cnode:GNode;
-			switch (tok.type){
+			switch (tok.type)
+			{
 				case TokenType.ident:
 				case TokenType.constant:
 				case TokenType.LParent:
@@ -740,26 +896,33 @@ package parser
 				case TokenType.LOPNot:
 				case TokenType.INCREMENT:
 					tnode=facter();
-					if(tok && tok.type==TokenType.COP){
-						cnode=new GNode(GNodeType.COP,tok);	
+					if (tok && tok.type == TokenType.COP)
+					{
+						cnode=new GNode(GNodeType.COP, tok);
 						match(TokenType.COP);
 						cnode.addChild(tnode);
 						cnode.addChild(Term());
 						return cnode;
-					}else{
+					}
+					else
+					{
 						return tnode;
 					}
 					break;
 				case TokenType.MOP:
-					if(tok.word=="-"){
+					if (tok.word == "-")
+					{
 						tnode=facter();
-						if(tok && tok.type==TokenType.COP){
-							cnode=new GNode(GNodeType.COP,tok);	
+						if (tok && tok.type == TokenType.COP)
+						{
+							cnode=new GNode(GNodeType.COP, tok);
 							match(TokenType.COP);
 							cnode.addChild(tnode);
 							cnode.addChild(Term());
 							return cnode;
-						}else{
+						}
+						else
+						{
 							return tnode;
 						}
 					}
@@ -769,80 +932,107 @@ package parser
 			}
 			return null;
 		}
-		private function priority(s:GNode):int{
-			if(s.nodeType==GNodeType.MOP){
-				if(s.word=="+" || s.word=="-"){
+
+		private function priority(s:GNode):int
+		{
+			if (s.nodeType == GNodeType.MOP)
+			{
+				if (s.word == "+" || s.word == "-")
+				{
 					return 1;
 				}
 				return 2;
 			}
 			return 3;
 		}
-		private function MopFactor():GNode{
+
+		private function MopFactor():GNode
+		{
 			var tnode:GNode;
 			var cnode:GNode;
-			var nodearr:Array=[];//输出后缀表达式
-			var stack:Array=[];//符号堆栈
+			var nodearr:Array=[]; //输出后缀表达式
+			var stack:Array=[]; //符号堆栈
 			nodearr.push(gene());
 			var i:int;
-			if(tok && tok.type==TokenType.MOP){
-				while(tok.type==TokenType.MOP){
-					cnode=new GNode(GNodeType.MOP,tok);
+			if (tok && tok.type == TokenType.MOP)
+			{
+				while (tok.type == TokenType.MOP)
+				{
+					cnode=new GNode(GNodeType.MOP, tok);
 					var pri:int=priority(cnode);
-					if(stack.length==0){
+					if (stack.length == 0)
+					{
 						//stack.push(cnode);
-					}else{
-						var len:int=stack.length-1;
-						for(i=len;i>=0;i--){
-							if(priority(stack[i] as GNode)>=pri){//压入到输出
+					}
+					else
+					{
+						var len:int=stack.length - 1;
+						for (i=len; i >= 0; i--)
+						{
+							if (priority(stack[i] as GNode) >= pri)
+							{ //压入到输出
 								nodearr.push(stack.pop());
-							}else{
+							}
+							else
+							{
 								break;
 							}
 						}
 					}
-					stack.push(cnode);//符号入栈
+					stack.push(cnode); //符号入栈
 					match(TokenType.MOP);
 					nodearr.push(gene());
 				}
 				//5+10*(100-3);
-				while(stack.length>0){
-					nodearr.push(stack.pop());//压入到输出
+				while (stack.length > 0)
+				{
+					nodearr.push(stack.pop()); //压入到输出
 				}
-				
+
 				//通过以上2步，已经做到了后缀表达式
 				var ccc:String="";
-				for(i=0;i<nodearr.length;i++){
-					ccc+=(nodearr[i] as GNode).word+".";
+				for (i=0; i < nodearr.length; i++)
+				{
+					ccc+=(nodearr[i] as GNode).word + ".";
 				}
 				//trace(ccc);
 				//转为语法树返回
-				
-				for(i=0;i<nodearr.length;i++){
-					if((nodearr[i] as GNode).childs.length==0 && (nodearr[i] as GNode).nodeType==GNodeType.MOP){//
+
+				for (i=0; i < nodearr.length; i++)
+				{
+					if ((nodearr[i] as GNode).childs.length == 0 && (nodearr[i] as GNode).nodeType == GNodeType.MOP)
+					{ //
 						tnode=(nodearr[i] as GNode);
 						var right:GNode=stack.pop();
 						var left:GNode=stack.pop();
 						tnode.addChild(left);
 						tnode.addChild(right);
 						stack.push(tnode);
-					}else{
+					}
+					else
+					{
 						stack.push(nodearr[i]);
 					}
 				}
-				if(stack.length==1){
+				if (stack.length == 1)
+				{
 					//trace((stack[0] as GNode).toString());
 					return stack[0];
-				}else{
-					error();//"错误的表达式"
 				}
-				
+				else
+				{
+					error(); //"错误的表达式"
+				}
+
 			}
 			return nodearr[0];
 		}
-		private function facter():GNode{
-			
-			switch (tok.type){
+
+		private function facter():GNode
+		{
+
+			switch (tok.type)
+			{
 				case TokenType.ident:
 				case TokenType.constant:
 				case TokenType.LParent:
@@ -853,7 +1043,8 @@ package parser
 					//
 					break;
 				case TokenType.MOP:
-					if(tok.word=="-"){
+					if (tok.word == "-")
+					{
 						return MopFactor();
 					}
 					break;
@@ -862,26 +1053,33 @@ package parser
 			}
 			return null;
 		}
-		private function IDENT():GNode{
+
+		private function IDENT():GNode
+		{
 			var tnode:GNode;
-			switch (tok.type){
+			switch (tok.type)
+			{
 				case TokenType.ident:
 					var cnode:GNode=new GNode(GNodeType.IDENT);
 					//
-					tnode=new GNode(GNodeType.VarID,tok);
+					tnode=new GNode(GNodeType.VarID, tok);
 					cnode.addChild(tnode);
 					match(TokenType.ident);
-					while(tok.type==TokenType.LBRACKET || tok.type==TokenType.DOT){
-						if(tok.type==TokenType.LBRACKET){
+					while (tok.type == TokenType.LBRACKET || tok.type == TokenType.DOT)
+					{
+						if (tok.type == TokenType.LBRACKET)
+						{
 							match(TokenType.LBRACKET);
 							tnode=new GNode(GNodeType.Index);
 							tnode.addChild(EXP());
 							cnode.addChild(tnode);
 							match(TokenType.RBRACKET);
-						}else {
+						}
+						else
+						{
 							//if(tok.type==TokenType.DOT)
 							match(TokenType.DOT);
-							tnode=new GNode(GNodeType.VarID,tok);
+							tnode=new GNode(GNodeType.VarID, tok);
 							cnode.addChild(tnode);
 							match(TokenType.ident);
 						}
@@ -894,12 +1092,15 @@ package parser
 			}
 			return null;
 		}
-		private function gene():GNode{
+
+		private function gene():GNode
+		{
 			var cnode:GNode;
 			var tnode:GNode;
-			switch (tok.type){
+			switch (tok.type)
+			{
 				case TokenType.constant:
-					cnode=new GNode(GNodeType.ConstID,tok);
+					cnode=new GNode(GNodeType.ConstID, tok);
 					cnode.word=tok.word;
 					match(TokenType.constant);
 					return cnode;
@@ -911,19 +1112,21 @@ package parser
 					return cnode;
 					break;
 				case TokenType.keynew:
-					cnode=new GNode(GNodeType.newClass,tok);
+					cnode=new GNode(GNodeType.newClass, tok);
 					match(TokenType.keynew);
-					var id:GNode=new GNode(GNodeType.VarID,tok);
+					var id:GNode=new GNode(GNodeType.VarID, tok);
 					//
 					cnode.addChild(id);
 					match(TokenType.ident);
-					while(tok.type==TokenType.DOT){
+					while (tok.type == TokenType.DOT)
+					{
 						match(TokenType.DOT);
-						id.word+="."+tok.word;
+						id.word+="." + tok.word;
 						match(TokenType.ident);
 					}
 					match(TokenType.LParent);
-					if(tok.type!=TokenType.RParent){
+					if (tok.type != TokenType.RParent)
+					{
 						cnode.addChild(EXPList());
 					}
 					match(TokenType.RParent);
@@ -931,26 +1134,32 @@ package parser
 					break;
 				case TokenType.ident:
 					tnode=IDENT();
-					if(tok.type==TokenType.LParent){
+					if (tok.type == TokenType.LParent)
+					{
 						cnode=new GNode(GNodeType.FunCall);
 						cnode.addChild(tnode);
 						match(TokenType.LParent);
-						if(tok.type!=TokenType.RParent){
+						if (tok.type != TokenType.RParent)
+						{
 							cnode.addChild(EXPList());
 						}
 						match(TokenType.RParent);
 						return cnode;
-					}else if(tok.type==TokenType.INCREMENT){
+					}
+					else if (tok.type == TokenType.INCREMENT)
+					{
 						cnode=new GNode(GNodeType.INCREMENT);
 						cnode.word=tok.word;
 						cnode.addChild(tnode);
 						match(TokenType.INCREMENT);
 						return cnode;
-					}else{
+					}
+					else
+					{
 						return tnode;
 					}
 					break;
-				
+
 				case TokenType.LOPNot:
 					match(TokenType.LOPNot);
 					tnode=gene();
@@ -959,7 +1168,8 @@ package parser
 					cnode.addChild(tnode);
 					return cnode;
 				case TokenType.MOP:
-					if(tok.word=="-"){
+					if (tok.word == "-")
+					{
 						match(TokenType.MOP);
 						tnode=gene();
 						cnode=new GNode(GNodeType.Nagtive);
@@ -979,22 +1189,30 @@ package parser
 			}
 			return null;
 		}
-		
-		
-		private function nextToken():void{
+
+
+		private function nextToken():void
+		{
 			tok=this.lex.words[index++] as Token;
 			//index++;
 		}
-		private function match(type:int,word:String=null):void{
+
+		private function match(type:int, word:String=null):void
+		{
 			//trace("try eat ",tok.word);
-			if(type==tok.type && (word==null ||  tok.word==word)){
-					nextToken();
-			}else{//匹配失败
+			if (type == tok.type && (word == null || tok.word == word))
+			{
+				nextToken();
+			}
+			else
+			{ //匹配失败
 				error();
 			}
 		}
-		private function error():void{
-			throw new Error(this.name+"语法错误>行号:"+tok.line+","+tok.getLine()+"，单词："+tok.word);
+
+		private function error():void
+		{
+			throw new Error(this.name + "语法错误>行号:" + tok.line + "," + tok.getLine() + "，单词：" + tok.word);
 		}
 	}
 }
